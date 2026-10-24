@@ -22,23 +22,41 @@ _TAG_RE = re.compile(r"<[^>]+>")
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
-# Current settings, set by the config entry (UI-configurable).
-_DATA = {CONF_URL: DEFAULT_SEARCH_URL, CONF_API_KEY: ""}
+
+def _entry_settings(hass: HomeAssistant) -> tuple[str, str]:
+    """Resolve (base_url, api_key) live: config entry wins, then YAML default.
+
+    Read per call, so entry reloads can never leave a stale value behind.
+    """
+    for entry in hass.config_entries.async_entries(DOMAIN):
+        if entry.disabled_by is None and entry.state.recoverable:
+            url = entry.options.get(CONF_URL) or entry.data.get(CONF_URL)
+            if url and _normalize(url):
+                url = _normalize(url)
+            else:
+                url = DEFAULT_SEARCH_URL
+            key = (
+                entry.options.get(CONF_API_KEY)
+                or entry.data.get(CONF_API_KEY)
+                or ""
+            ).strip()
+            return url, key
+    return DEFAULT_SEARCH_URL, ""
 
 
-def get_search_url() -> str:
+def get_search_url(hass: HomeAssistant) -> str:
     """Return the configured Firecrawl base URL (no trailing slash)."""
-    return _DATA[CONF_URL] or DEFAULT_SEARCH_URL
+    return _entry_settings(hass)[0]
 
 
-def get_api_key() -> str:
+def get_api_key(hass: HomeAssistant) -> str:
     """Return the configured API key ("" = none, for self-hosted)."""
-    return _DATA[CONF_API_KEY] or ""
+    return _entry_settings(hass)[1]
 
 
 def _normalize(base: str) -> str:
     """Turn a base URL or a full search URL into the base URL."""
-    base = base.strip().rstrip("/")
+    base = (base or "").strip().rstrip("/")
     if base.endswith(SEARCH_PATH):
         base = base[: -len(SEARCH_PATH)]
     return base
@@ -49,32 +67,26 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     _LOGGER.info(
         "firecrawl_search loaded: web_search tool registered on the 'assist' "
         "LLM API (backend %s)",
-        get_search_url(),
+        get_search_url(hass),
     )
     return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up from the UI (Settings -> Devices & Services)."""
-    url = entry.options.get(CONF_URL) or entry.data.get(CONF_URL)
-    if url:
-        _DATA[CONF_URL] = _normalize(url)
-    key = entry.options.get(CONF_API_KEY) or entry.data.get(CONF_API_KEY) or ""
-    _DATA[CONF_API_KEY] = key.strip()
+    url, key = _entry_settings(hass)
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     _LOGGER.info(
         "firecrawl_search configured: web_search tool registered on the "
         "'assist' LLM API (backend %s, api_key %s)",
-        get_search_url(),
-        "set" if get_api_key() else "not set",
+        url,
+        "set" if key else "not set",
     )
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Fall back to the defaults when the entry is unloaded/removed."""
-    _DATA[CONF_URL] = DEFAULT_SEARCH_URL
-    _DATA[CONF_API_KEY] = ""
+    """Nothing to clean up: settings are resolved per call."""
     return True
 
 
@@ -134,7 +146,7 @@ class FirecrawlSearchTool(_llm.Tool):
                 data={"error": "empty query"}, error=True
             )
 
-        base = get_search_url()
+        base, _api_key = get_search_url(hass), get_api_key(hass)
         session = async_get_clientsession(hass)
         payload = {
             "query": query,
@@ -142,7 +154,7 @@ class FirecrawlSearchTool(_llm.Tool):
             "lang": lang,
         }
         headers = {}
-        if api_key := get_api_key():
+        if api_key := _api_key:
             headers["Authorization"] = f"Bearer {api_key}"
         try:
             resp = await session.post(

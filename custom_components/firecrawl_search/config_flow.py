@@ -99,8 +99,9 @@ class FirecrawlSearchConfigFlow(ConfigFlow, domain="firecrawl_search"):
             errors=errors or None,
         )
 
+    @staticmethod
     @callback
-    def async_get_options_flow(self, config_entry):
+    def async_get_options_flow(config_entry) -> "FirecrawlSearchOptionsFlow":
         """Get the options flow for this handler."""
         return FirecrawlSearchOptionsFlow()
 

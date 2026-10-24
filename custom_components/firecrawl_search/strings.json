@@ -1,3 +1,41 @@
 {
+  "title": "Firecrawl Web Search",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Firecrawl Web Search",
+        "description": "URL of your self-hosted Firecrawl instance (base URL or full search URL). It is test-searched before saving.",
+        "data": {
+          "url": "Firecrawl URL"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect: check the host/port and that the Firecrawl stack is running.",
+      "bad_search_path": "The server answered, but the search endpoint (\"/v2/search\") was not found.",
+      "invalid_response": "The server answered, but not with Firecrawl search JSON.",
+      "unknown": "Unexpected error."
+    },
+    "abort": {
+      "already_configured": "Firecrawl Web Search is already configured. Use its options to change the URL."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Firecrawl Web Search",
+        "description": "URL of your self-hosted Firecrawl instance (base URL or full search URL). It is test-searched before saving.",
+        "data": {
+          "url": "Firecrawl URL"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect: check the host/port and that the Firecrawl stack is running.",
+      "bad_search_path": "The server answered, but the search endpoint (\"/v2/search\") was not found.",
+      "invalid_response": "The server answered, but not with Firecrawl search JSON.",
+      "unknown": "Unexpected error."
+    }
+  },
   "services": {}
 }

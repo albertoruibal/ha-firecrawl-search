@@ -2,9 +2,10 @@
   "domain": "firecrawl_search",
   "name": "Firecrawl Web Search (Assist tool)",
   "codeowners": ["@alonsoribuial"],
+  "config_flow": true,
   "documentation": "https://github.com/mobialia",
   "issue_tracker": "https://github.com/mobialia/issues",
   "iot_class": "local_polling",
   "requirements": [],
-  "version": "1.0.0"
+  "version": "1.1.0"
 }

@@ -73,7 +73,7 @@ Make sure your conversation agent has the **Assist** LLM API enabled:
   enables the `assist` API)
 
 Then just ask. The model decides when to search; the tool prompt nudges it to use
-`web_search` for current events, prices, weather, sport — anything outside the home.
+search for current events, prices, weather, sport — anything outside the home.
 
 Tool arguments: `query` (required), `count` (1–5, default 3), `lang` (language code,
 default `"gl"` — edit the fallback in `async_call` in `__init__.py` to fit your family,

@@ -7,7 +7,7 @@ import re
 import probatio
 import aiohttp
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_URL
+from homeassistant.const import CONF_API_KEY, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, llm as _llm
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -22,14 +22,18 @@ _TAG_RE = re.compile(r"<[^>]+>")
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
-# Current search base URL, set by the config entry (UI-configurable).
-_DATA = {CONF_URL: DEFAULT_SEARCH_URL}
+# Current settings, set by the config entry (UI-configurable).
+_DATA = {CONF_URL: DEFAULT_SEARCH_URL, CONF_API_KEY: ""}
 
 
 def get_search_url() -> str:
     """Return the configured Firecrawl base URL (no trailing slash)."""
-    base = _DATA.get(CONF_URL) or DEFAULT_SEARCH_URL
-    return base
+    return _DATA[CONF_URL] or DEFAULT_SEARCH_URL
+
+
+def get_api_key() -> str:
+    """Return the configured API key ("" = none, for self-hosted)."""
+    return _DATA[CONF_API_KEY] or ""
 
 
 def _normalize(base: str) -> str:
@@ -52,20 +56,25 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up from the UI (Settings -> Devices & Services)."""
-    url = entry.options.get(CONF_URL) or entry.data.get(CONF_URL) or DEFAULT_SEARCH_URL
-    _DATA[CONF_URL] = _normalize(url)
+    url = entry.options.get(CONF_URL) or entry.data.get(CONF_URL)
+    if url:
+        _DATA[CONF_URL] = _normalize(url)
+    key = entry.options.get(CONF_API_KEY) or entry.data.get(CONF_API_KEY) or ""
+    _DATA[CONF_API_KEY] = key.strip()
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     _LOGGER.info(
         "firecrawl_search configured: web_search tool registered on the "
-        "'assist' LLM API (backend %s)",
+        "'assist' LLM API (backend %s, api_key %s)",
         get_search_url(),
+        "set" if get_api_key() else "not set",
     )
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Fall back to the default URL when the entry is unloaded/removed."""
+    """Fall back to the defaults when the entry is unloaded/removed."""
     _DATA[CONF_URL] = DEFAULT_SEARCH_URL
+    _DATA[CONF_API_KEY] = ""
     return True
 
 
@@ -132,9 +141,12 @@ class FirecrawlSearchTool(_llm.Tool):
             "limit": count,
             "lang": lang,
         }
+        headers = {}
+        if api_key := get_api_key():
+            headers["Authorization"] = f"Bearer {api_key}"
         try:
             resp = await session.post(
-                base + SEARCH_PATH, json=payload, timeout=TIMEOUT
+                base + SEARCH_PATH, json=payload, headers=headers, timeout=TIMEOUT
             )
             resp.raise_for_status()
             body = await resp.json()

@@ -13,9 +13,9 @@ results (title, url, snippet) and answers from them, in the language of your pip
 Uses the Home Assistant [LLM API](https://developers.home-assistant.io/core/internals/llm-api/)
 tool-contribution mechanism: the integration ships an `llm.py` platform that registers a
 web-search tool (`firecrawl_search__web_search`) on the built-in **Assist** API. Any
-conversation agent configured with the
-Assist API (e.g. the Ollama integration with *Control Home Assistant* enabled) picks the tool
-up automatically — no changes to your pipelines or agents.
+conversation agent configured with the Assist API (e.g. the Ollama integration with
+*Control Home Assistant* enabled) picks the tool up automatically — no changes to
+your pipelines or agents, and no per-model function definitions to write.
 
 ```
 voice satellite → Assist pipeline → conversation agent (Ollama / OpenAI / …)
@@ -54,20 +54,31 @@ Restart Home Assistant.
 No YAML needed — the Firecrawl URL is configured in the web UI:
 
 - **First setup:** *Settings → Devices & Services → Add Integration → Firecrawl Web
-  Search*. Enter your instance's URL — a base URL (`http://192.168.0.11:3002`) or the
+  Search*. Enter your instance's URL — a base URL (`http://192.168.0.1:3002`) or the
   full search URL (`http://…:3002/v2/search`) both work. Before saving, the integration
   runs a real test search against it, so a wrong host/port/endpoint is caught at setup.
 - **Change it later:** open the integration in *Settings → Devices & Services* and hit
   **Configure** — same probe, entry reloads automatically. No code edits, no restarts.
 - **Without the UI (optional):** a bare `firecrawl_search:` key in `configuration.yaml`
-  also works; the tool then uses the built-in default URL (`http://192.168.0.11:3002`,
+  also works; the tool then uses the built-in default URL (`http://192.168.0.1:3002`,
   change `DEFAULT_SEARCH_URL` in `const.py` if you fork). A config entry, if present,
   overrides the YAML path.
 
 Point it at your instance (host LAN IP works well from a separate HA machine;
-a Tailscale/VPN IP makes it usable off-home). If your Firecrawl enforces an API key,
-add an `Authorization: Bearer …` header to the `session.post(…)` call in
-`__init__.py` — the shared HA aiohttp session keeps it out of any config storage.
+a Tailscale/VPN IP makes it usable off-home).
+
+### Using the hosted Firecrawl API (api.firecrawl.dev) instead
+
+Don't run your own Firecrawl? Point the tool at the official hosted API:
+
+1. Get an API key at [firecrawl.dev](https://www.firecrawl.dev/) (free tier available).
+2. Set up the integration as above, with **URL** `https://api.firecrawl.dev` and your
+   key in the **API key** field (sent as `Authorization: Bearer …`).
+3. The same probe validates your key at setup — a wrong key is rejected with a clear
+   error instead of failing later at runtime.
+
+In the options dialog an empty key field **keeps** the saved key; the key is stored in
+HA's config storage and only ever sent to the Firecrawl host you configured.
 
 ## Using it
 

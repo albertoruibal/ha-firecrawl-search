@@ -4,35 +4,123 @@
     "step": {
       "user": {
         "title": "Firecrawl Web Search",
-        "description": "URL of your self-hosted Firecrawl instance (base URL or full search URL). It is test-searched before saving.",
-        "data": {
-          "url": "Firecrawl URL"
+        "description": "Configure the Firecrawl endpoint and defaults. The URL is test-searched before saving.",
+        "sections": {
+          "connection": {
+            "name": "Connection",
+            "data": {
+              "url": "Firecrawl URL",
+              "api_key": "API key"
+            },
+            "data_description": {
+              "url": "Base URL or full search URL.",
+              "api_key": "Optional. Required for the hosted Firecrawl API."
+            }
+          },
+          "search": {
+            "name": "Search defaults",
+            "data": {
+              "results": "Number of results",
+              "snippet_chars": "Snippet length",
+              "default_lang": "Default language",
+              "search_timeout": "Search timeout"
+            },
+            "data_description": {
+              "results": "1-10. Used when the model does not request a specific count.",
+              "snippet_chars": "100-2000 characters returned for each result.",
+              "default_lang": "Two-letter language code used when the model does not provide one.",
+              "search_timeout": "5-120 seconds."
+            }
+          },
+          "page": {
+            "name": "Page retrieval",
+            "data": {
+              "enable_read_page": "Enable full-page retrieval",
+              "max_page_chars": "Max page characters",
+              "scrape_timeout": "Page fetch timeout",
+              "cache_max_age_hours": "Cache max age",
+              "wait_for": "Page load wait"
+            },
+            "data_description": {
+              "enable_read_page": "Adds a tool that fetches the full markdown of a result URL.",
+              "max_page_chars": "1000-50000 characters. Longer pages are truncated.",
+              "scrape_timeout": "1-300 seconds. Firecrawl request timeout.",
+              "cache_max_age_hours": "0-168 hours. 0 always fetches a fresh page.",
+              "wait_for": "0-60 seconds. Extra wait before extracting the page."
+            }
+          }
         }
       }
     },
     "error": {
       "cannot_connect": "Failed to connect: check the host/port and that the Firecrawl stack is running.",
       "bad_search_path": "The server answered, but the search endpoint (\"/v2/search\") was not found.",
+      "invalid_auth": "The Firecrawl API key was rejected.",
       "invalid_response": "The server answered, but not with Firecrawl search JSON.",
       "unknown": "Unexpected error."
     },
     "abort": {
-      "already_configured": "Firecrawl Web Search is already configured. Use its options to change the URL."
+      "already_configured": "Firecrawl Web Search is already configured. Use its options to change the settings."
     }
   },
   "options": {
     "step": {
       "init": {
         "title": "Firecrawl Web Search",
-        "description": "URL of your self-hosted Firecrawl instance (base URL or full search URL). It is test-searched before saving.",
-        "data": {
-          "url": "Firecrawl URL"
+        "description": "Update the Firecrawl connection and defaults. The URL is test-searched before saving.",
+        "sections": {
+          "connection": {
+            "name": "Connection",
+            "data": {
+              "url": "Firecrawl URL",
+              "api_key": "API key",
+              "clear_api_key": "Clear saved API key"
+            },
+            "data_description": {
+              "url": "Base URL or full search URL.",
+              "api_key": "Leave empty to keep the saved key.",
+              "clear_api_key": "Remove the saved key when the API key field is empty."
+            }
+          },
+          "search": {
+            "name": "Search defaults",
+            "data": {
+              "results": "Number of results",
+              "snippet_chars": "Snippet length",
+              "default_lang": "Default language",
+              "search_timeout": "Search timeout"
+            },
+            "data_description": {
+              "results": "1-10. Used when the model does not request a specific count.",
+              "snippet_chars": "100-2000 characters returned for each result.",
+              "default_lang": "Two-letter language code used when the model does not provide one.",
+              "search_timeout": "5-120 seconds."
+            }
+          },
+          "page": {
+            "name": "Page retrieval",
+            "data": {
+              "enable_read_page": "Enable full-page retrieval",
+              "max_page_chars": "Max page characters",
+              "scrape_timeout": "Page fetch timeout",
+              "cache_max_age_hours": "Cache max age",
+              "wait_for": "Page load wait"
+            },
+            "data_description": {
+              "enable_read_page": "Adds a tool that fetches the full markdown of a result URL.",
+              "max_page_chars": "1000-50000 characters. Longer pages are truncated.",
+              "scrape_timeout": "1-300 seconds. Firecrawl request timeout.",
+              "cache_max_age_hours": "0-168 hours. 0 always fetches a fresh page.",
+              "wait_for": "0-60 seconds. Extra wait before extracting the page."
+            }
+          }
         }
       }
     },
     "error": {
       "cannot_connect": "Failed to connect: check the host/port and that the Firecrawl stack is running.",
       "bad_search_path": "The server answered, but the search endpoint (\"/v2/search\") was not found.",
+      "invalid_auth": "The Firecrawl API key was rejected.",
       "invalid_response": "The server answered, but not with Firecrawl search JSON.",
       "unknown": "Unexpected error."
     }
